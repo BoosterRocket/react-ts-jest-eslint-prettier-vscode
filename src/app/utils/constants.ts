@@ -1,2 +1,2 @@
-export const REACT_URL = 'https://reactjs.org';
-export const VITE_URL = 'https://vitejs.dev/guide/features.html';
+export const SPAWN_LOCATION = { row: 1, column: 4 };
+export const SPAWN_ROTATION = 0;

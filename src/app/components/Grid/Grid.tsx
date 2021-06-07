@@ -10,11 +10,10 @@ interface Props {
 }
 
 function Grid({ height, width, matrix }: Props): JSX.Element {
-  const flattened = matrix.reduce((_flattened, row) => [..._flattened, ...row], []);
   return (
     <div className={styles.grid} style={{ height, width }}>
-      {flattened.map(({ row, column, content }) => (
-        <Cell key={`cell-${row}-${column}`} row={row} column={column} content={content} />
+      {matrix.flat().map(({ row, column, shape }) => (
+        <Cell key={`cell-${row}-${column}`} row={row} column={column} shape={shape} />
       ))}
     </div>
   );
