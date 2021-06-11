@@ -23,6 +23,11 @@ export interface RotationData {
 }
 
 export const BLOCK_MAP: { [key in BlockShape]: RotationData } = {
+  /* 
+      Note: the order matters - ordered from top left to bottom right, 
+      each digit represents the offset from the refCoord 
+  */
+
   I: {
     'rotation-0': [
       { row: 0, column: -1 },

@@ -106,7 +106,7 @@ const GridLogic = ({ rows, columns }: { rows: number; columns: number }): JSX.El
       ArrowDown: () => handleRefCoordChange({ row: refCoord.row + 1, column: refCoord.column }),
       ArrowLeft: () => handleRefCoordChange({ row: refCoord.row, column: refCoord.column - 1 }),
       ArrowRight: () => handleRefCoordChange({ row: refCoord.row, column: refCoord.column + 1 }),
-      Space: () => {},
+      Space: handleHardDrop,
       none: () => {},
     };
 
@@ -121,6 +121,21 @@ const GridLogic = ({ rows, columns }: { rows: number; columns: number }): JSX.El
     });
 
     if (hasReachedBoundary(updatedPosition)) return;
+
+    setRefCoord(updatedRefCoord);
+    setBlockPosition(updatedPosition);
+  }
+
+  function handleHardDrop() {
+    const bottomRow = rows - 1;
+    const bottomSquare = BLOCK_MAP[blockShape][`rotation-${blockRotation}` as RotationOption][3];
+    const updatedRefCoord = { row: bottomRow - bottomSquare.row, column: refCoord.column };
+
+    const updatedPosition = calculateBlockPosition({
+      refCoord: updatedRefCoord,
+      shape: blockShape,
+      rotation: blockRotation,
+    });
 
     setRefCoord(updatedRefCoord);
     setBlockPosition(updatedPosition);
