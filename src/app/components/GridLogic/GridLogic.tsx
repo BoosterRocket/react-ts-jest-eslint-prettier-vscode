@@ -31,15 +31,9 @@ const GridLogic = ({ rows, columns, interval }: Props): JSX.Element => {
   const [frameUpdate, toggleFrameUpdate] = useState(false);
   const [refCoord, setRefCoord] = useState<CellCoord>(SPAWN_LOCATION);
   const [blockRotation, setBlockRotation] = useState<Rotation>(SPAWN_ROTATION);
-  const [blockShape] = useState<BlockShape>(getRandomBlockShape());
-
-  const [blockPosition, setBlockPosition] = useState<PositionData>(
-    calculateBlockPosition({
-      refCoord,
-      shape: blockShape,
-      rotation: blockRotation,
-    }),
-  );
+  const [blockShape, setBlockShape] = useState<BlockShape>(getRandomBlockShape());
+  const [hasReachedDepth, setHasReachedDepth] = useState(false);
+  const [blockPosition, setBlockPosition] = useState<PositionData>(initBlockPosition());
 
   const [matrix, setMatrix] = useState<Cell[][]>(
     [...(new Array(rows) as Cell[][])].map((_, row) =>
@@ -65,6 +59,14 @@ const GridLogic = ({ rows, columns, interval }: Props): JSX.Element => {
 
   function getRandomBlockShape(): BlockShape {
     return (Object.keys(BlockShape) as BlockShape[])[getRandomInt(7)];
+  }
+
+  function initBlockPosition() {
+    return calculateBlockPosition({
+      refCoord,
+      shape: blockShape,
+      rotation: blockRotation,
+    });
   }
 
   function calculateBlockPosition({ refCoord: _refCoord, shape, rotation }: BlockData): PositionData {
@@ -115,7 +117,10 @@ const GridLogic = ({ rows, columns, interval }: Props): JSX.Element => {
         setBlockRotation(updatedRotation);
         setBlockPosition(updatedPosition);
       },
-      ArrowDown: () => handleRefCoordChange({ row: refCoord.row + 1, column: refCoord.column }),
+      ArrowDown: () => {
+        // toggleFrameUpdate(!frameUpdate);
+        handleRefCoordChange({ row: refCoord.row + 1, column: refCoord.column });
+      },
       ArrowLeft: () => handleRefCoordChange({ row: refCoord.row, column: refCoord.column - 1 }),
       ArrowRight: () => handleRefCoordChange({ row: refCoord.row, column: refCoord.column + 1 }),
       Space: handleHardDrop,
@@ -132,6 +137,7 @@ const GridLogic = ({ rows, columns, interval }: Props): JSX.Element => {
       rotation: blockRotation,
     });
 
+    if (isMaxColumnDepth(updatedPosition)) handleEndOfBlockCycle();
     if (hasReachedBoundary(updatedPosition)) return;
 
     setRefCoord(updatedRefCoord);
@@ -151,16 +157,41 @@ const GridLogic = ({ rows, columns, interval }: Props): JSX.Element => {
 
     setRefCoord(updatedRefCoord);
     setBlockPosition(updatedPosition);
+    toggleFrameUpdate(!frameUpdate);
+  }
+
+  function handleEndOfBlockCycle() {
+    const handlers = {
+      0: () => setHasReachedDepth(true),
+      1: () => resetBlockCycle(),
+    };
+
+    handlers[!hasReachedDepth ? 0 : 1]();
   }
 
   function hasReachedBoundary(position: PositionData): boolean {
     const columnBoundaries = ['-1', `${columns}`];
-    const rowBoundary = `${rows}`;
 
-    return Object.entries(position).some(
-      ([row, squares]) =>
-        row === rowBoundary || Object.keys(squares).some((columnCoord) => columnBoundaries.includes(columnCoord)),
+    return (
+      isMaxColumnDepth(position) ||
+      Object.entries(position).some(([, squares]) =>
+        Object.keys(squares).some((columnCoord) => columnBoundaries.includes(columnCoord)),
+      )
     );
+  }
+
+  function isMaxColumnDepth(position: PositionData): boolean {
+    const rowBoundary = `${rows}`;
+    return Object.entries(position).some(([row]) => row === rowBoundary);
+  }
+
+  function resetBlockCycle() {
+    // toggleFrameUpdate(!frameUpdate);
+    setRefCoord(SPAWN_LOCATION);
+    setBlockRotation(SPAWN_ROTATION);
+    setBlockShape(getRandomBlockShape());
+    setHasReachedDepth(false);
+    setBlockPosition(initBlockPosition());
   }
 
   return <Grid height={`${rows * 24}px`} width={`${columns * 24}px`} matrix={matrix} />;
