@@ -21,7 +21,14 @@ interface PositionData {
   [key: number]: { [key: number]: BlockShape };
 }
 
-const GridLogic = ({ rows, columns }: { rows: number; columns: number }): JSX.Element => {
+interface Props {
+  rows: number;
+  columns: number;
+  interval: number;
+}
+
+const GridLogic = ({ rows, columns, interval }: Props): JSX.Element => {
+  const [frameUpdate, toggleFrameUpdate] = useState(false);
   const [refCoord, setRefCoord] = useState<CellCoord>(SPAWN_LOCATION);
   const [blockRotation, setBlockRotation] = useState<Rotation>(SPAWN_ROTATION);
   const [blockShape] = useState<BlockShape>(getRandomBlockShape());
@@ -50,6 +57,11 @@ const GridLogic = ({ rows, columns }: { rows: number; columns: number }): JSX.El
   }, [refCoord, blockRotation]);
 
   useEffect(() => updateMatrix(blockPosition), [blockPosition]);
+
+  useEffect(() => {
+    setTimeout(() => toggleFrameUpdate(!frameUpdate), interval);
+    handleRefCoordChange({ row: refCoord.row + 1, column: refCoord.column });
+  }, [frameUpdate]);
 
   function getRandomBlockShape(): BlockShape {
     return (Object.keys(BlockShape) as BlockShape[])[getRandomInt(7)];
